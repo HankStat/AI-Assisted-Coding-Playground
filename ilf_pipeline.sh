@@ -45,7 +45,7 @@ VAL_N=$(( $VAL_END_TASK_ID - $VAL_START_TASK_ID + 1 ))
 TEST_START_TASK_ID=11
 TEST_END_TASK_ID=111 # (should be exclusive)
 
-CONDA_ENV="ilf"
+CONDA_ENV="ilf/bin/activate"
 EXPERIMENT_DIR="${PARENT_DIR}/${EXP_NAME}"
 
 echo "Running with arguments -i=${INPUT_FILE}, -f=${FEEDBACK_COLUMN}, -r=${REFINEMENTS_COLUMN}," \
@@ -53,8 +53,8 @@ echo "Running with arguments -i=${INPUT_FILE}, -f=${FEEDBACK_COLUMN}, -r=${REFIN
     "-e=${NUM_EPOCHS}, -d=${PARENT_DIR}."
 echo "Outputting experiment results in ${EXPERIMENT_DIR}."
 
-conda deactivate
-conda activate ${CONDA_ENV}
+deactivate
+source ${CONDA_ENV}
 
 mkdir -p ${EXPERIMENT_DIR}
 python preprocess_feedback_spreadsheet.py --input_file=${INPUT_FILE} \
@@ -81,7 +81,7 @@ CHECKPOINTS_DIR="$(pwd)/checkpoints"
 python finetune_refinement_model.py  \
     --do_train \
     --codegen_model_dir=${CHECKPOINTS_DIR} \
-    --model_name_or_path=codegen-6B \
+    --model_name_or_path=codegen-350M \
     --num_train_epochs=${NUM_EPOCHS} \
     --save_strategy=no \
     --learning_rate=${LEARNING_RATE} \
@@ -102,7 +102,7 @@ python finetune_refinement_model.py  \
 
 # Generate refinements using Pi_Ref
 python generate_refinements_codegen_finetuned.py \
-    --arch=codegen-6B \
+    --arch=codegen-350M \
     --codegen-model-dir=${CHECKPOINTS_DIR} \
     --num-samples=${NUM_OUTPUT_SAMPLES} --output-dir=${PI_REF_DIR} \
     --temperature=0.8 --feedback-file=${REF_VAL_FILE} \
@@ -112,11 +112,11 @@ python generate_refinements_codegen_finetuned.py \
 # Evaluate refinements generated for tasks in MBPP_Train, and 
 # keep only the correct ones for training Pi_Theta
 python eval_mbpp.py \
-    --input-file=${PI_REF_DIR}/refinements_codegen-6B_temp0.8_${EXP_NAME}.jsonl \
+    --input-file=${PI_REF_DIR}/refinements_codegen-350M_temp0.8_${EXP_NAME}.jsonl \
     --k=1,10 || exit
 python create_finetuning_data_from_refinements.py \
     --one-per-task \
-    --refinement-file=${PI_REF_DIR}/refinements_codegen-6B_temp0.8_${EXP_NAME}.jsonl_results.jsonl \
+    --refinement-file=${PI_REF_DIR}/refinements_codegen-350M_temp0.8_${EXP_NAME}.jsonl_results.jsonl \
     --output-dir=${PI_REF_DIR} \
     --output-file-suffix=surge_final || exit
 
@@ -130,7 +130,7 @@ FINAL_GOLD_FINETUNE_DIR=${EXPERIMENT_DIR}/final_gold_finetune_lr${LEARNING_RATE}
 python finetune.py  \
     --codegen_repo=${CHECKPOINTS_DIR} \
     --do_train \
-    --model_name_or_path=codegen-6B \
+    --model_name_or_path=codegen-350M \
     --save_strategy=no \
     --num_train_epochs=${NUM_EPOCHS} \
     --learning_rate=${LEARNING_RATE} \
@@ -154,7 +154,7 @@ FINAL_FINETUNE_DIR=${EXPERIMENT_DIR}/final_finetune_lr${LEARNING_RATE}_ga${GRADI
 python finetune.py  \
     --codegen_repo=${CHECKPOINTS_DIR} \
     --do_train \
-    --model_name_or_path=codegen-6B \
+    --model_name_or_path=codegen-350M \
     --save_strategy=no \
     --num_train_epochs=${NUM_EPOCHS} \
     --learning_rate=${LEARNING_RATE} \
@@ -180,7 +180,7 @@ python generate_code_for_mbpp.py \
     --codegen-model-dir=${CHECKPOINTS_DIR} \
     --num-samples=${NUM_OUTPUT_SAMPLES} \
     --output-dir=${FINAL_GOLD_FINETUNE_DIR} \
-    --arch=codegen-6B \
+    --arch=codegen-350M \
     -n=1 \
     --temperature=0.8 \
     --debug -s ${TEST_START_TASK_ID} -e ${TEST_END_TASK_ID} \
@@ -189,15 +189,15 @@ python generate_code_for_mbpp.py \
     --codegen-model-dir=${CHECKPOINTS_DIR} \
     --num-samples=${NUM_OUTPUT_SAMPLES} \
     --output-dir=${FINAL_FINETUNE_DIR} \
-    --arch=codegen-6B \
+    --arch=codegen-350M \
     -n=1 \
     --temperature=0.8 \
     --debug -s ${TEST_START_TASK_ID} -e ${TEST_END_TASK_ID} \
     --model-path=${FINAL_FINETUNE_DIR} || exit
 ## Now evaluate final generations
 python eval_mbpp.py \
-    --input-file=${FINAL_GOLD_FINETUNE_DIR}/samples_test_codegen-6B_1shot_temp0.8_${TEST_START_TASK_ID}-${TEST_END_TASK_ID}.jsonl \
+    --input-file=${FINAL_GOLD_FINETUNE_DIR}/samples_test_codegen-350M_1shot_temp0.8_${TEST_START_TASK_ID}-${TEST_END_TASK_ID}.jsonl \
     --k=1,10 || exit
 python eval_mbpp.py \
-    --input-file=${FINAL_FINETUNE_DIR}/samples_test_codegen-6B_1shot_temp0.8_${TEST_START_TASK_ID}-${TEST_END_TASK_ID}.jsonl \
+    --input-file=${FINAL_FINETUNE_DIR}/samples_test_codegen-350M_1shot_temp0.8_${TEST_START_TASK_ID}-${TEST_END_TASK_ID}.jsonl \
     --k=1,10 || exit

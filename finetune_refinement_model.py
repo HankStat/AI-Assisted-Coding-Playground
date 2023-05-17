@@ -376,10 +376,11 @@ def main():
 
         tokenizer = sample.create_custom_gpt2_tokenizer()
         tokenizer.pad_token = 50256
-        if model_args.parallelize:
+        """if model_args.parallelize:
             model.parallelize()
         else:
-            model = model.cuda()
+            model = model.cuda()"""
+        # model = model.cuda()
     else:
         raise ValueError(
             f"{model_args.model_name_or_path} is not a valid model name or path."
