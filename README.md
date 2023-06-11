@@ -11,7 +11,8 @@ Ubuntu 22.04
 Python 3.7
 1 V100 GPU
 ## Installation
-create virtual environment ilf & activate  
+Unzip two zip files first  
+Create virtual environment ilf & activate  
 
 ```
 git clone git@github.com:HankStat/JH_seniorproj.git  
@@ -19,9 +20,9 @@ python3.7 -m venv ilf
 source ilf/bin/activate
 ```
 
-install all dependencies    
-download codgen-350M-mono  
-make sure that CUDA is compatible with PyTorch
+Install all dependencies    
+Download codgen-350M-mono  
+Make sure that CUDA is compatible with PyTorch
 ```
 pip install -r requirements.txt  
 pip uninstall transformers  
@@ -65,8 +66,8 @@ If not, can you rewrite the steps of implementation and make it clearer?"
 
 ## Finetune codegen350M-mono model
 1. /Manual_Iterative_Refinement/InitialFail_but_Pass5 contains training data  
-2. use convert_txt_to_jsonl.py to convert txt to jsonl file
-3. fit data to codegen-350M-mono model  
+2. Use convert_txt_to_jsonl.py to convert txt to jsonl file
+3. Fit data to codegen-350M-mono model  
 ```
 python finetune.py  \
     --codegen_repo="Salesforce" \
@@ -97,6 +98,7 @@ python finetune.py  \
 python get_results.py task_id==id
 ```
 ## Demo (Win10 & Django)
+Make sure that the finetuned model is in codegenerator/demo_app/train_ifpu_v2
 ```
 cd Scripts
 activate
