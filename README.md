@@ -8,7 +8,7 @@ https://github.com/nyu-mll/ILF-for-code-generation
 [Poster](https://www.canva.com/design/DAFlHMIIvQU/UV08fExZSFdzEHFtuKBJNg/view)
 ## Requirements
 Ubuntu 22.04  
-Python 3.7
+Python 3.7  
 1 V100 GPU
 ## Installation
 Unzip two zip files first  
